@@ -5,6 +5,7 @@ Parts marked TODO are built by Member B and plugged in later.
 """
 from appliances import Household, create_appliance, load_appliance_table
 from config import APPLIANCE_CSV, CITIES
+from report import save_report
 from weather import WeatherClient, WeatherDataError
 
 
@@ -55,6 +56,18 @@ def check_weather(city):
     print(f"Strongest sunshine in the year: {max(values):g} W/m2")
 
 
+def save_report_from_menu(household):
+    """Save the TXT report and tell the user where it went (or what failed)."""
+    try:
+        path = save_report(household)
+    except ValueError as error:
+        print(error)
+    except OSError as error:
+        print(f"Could not save the report: {error}")
+    else:
+        print(f"Report saved to {path}")
+
+
 def main():
     """Run the menu loop."""
     try:
@@ -71,8 +84,9 @@ def main():
         print("4. Show my appliances and daily use")
         print("5. Check weather data")
         print("6. Recommend a solar system         (TODO - Member B)")
+        print("7. Save a report (TXT)")
         print("0. Exit")
-        choice = read_number("Choose: ", 0, 6, as_int=True)
+        choice = read_number("Choose: ", 0, 7, as_int=True)
         if choice == 0:
             print("Goodbye!")
             break
@@ -85,6 +99,8 @@ def main():
             print("No appliances yet." if household.is_empty() else household.summary())
         elif choice == 5:
             check_weather(household.city)
+        elif choice == 7:
+            save_report_from_menu(household)
         else:
             print("Not built yet.")
 
