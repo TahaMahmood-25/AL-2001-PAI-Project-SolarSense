@@ -1,7 +1,7 @@
 key,name,watts,kind,duty_cycle,default_hours,aliases
 led bulb,LED bulb,10,constant,1,6,bulb;light;led light;energy saver
 tube light,LED tube light,20,constant,1,6,tubelight;tube;led tube
-ceiling fan,Ceiling fan,75,constant,1,10,fan;ceiling fans;pankha
+ceiling fan,Ceiling fan,75,constant,1,10,fan;ceiling fans;ceiling;pankha;regular fan
 inverter fan,Inverter (DC) fan,30,constant,1,10,dc fan;bldc fan;energy saver fan
 pedestal fan,Pedestal fan,60,constant,1,8,stand fan;table fan
 exhaust fan,Exhaust fan,40,constant,1,3,extractor

@@ -6,6 +6,7 @@ Parts marked TODO are built by Member B and plugged in later.
 from appliances import Household, create_appliance, load_appliance_table
 from config import APPLIANCE_CSV, CITIES
 from report import save_report
+from text_match import ApplianceMatcher, parse_appliance_text
 from weather import WeatherClient, WeatherDataError
 
 
@@ -44,6 +45,29 @@ def add_appliance_from_list(household, table):
     print(f"Added {quantity} x {row['name']}.")
 
 
+def add_appliances_from_text(household, table, matcher):
+    """Read a sentence, match each part to the table and add what was understood."""
+    text = input("Describe your appliances, e.g. 2 ACs 8 hours, 4 fans, fridge\n> ").strip()
+    if not text:
+        print("Nothing typed.")
+        return
+    for item in parse_appliance_text(text, matcher):
+        row = item["row"]
+        if row is None:
+            print(f"Could not recognise '{item['original']}'.")
+            if input("Pick it from the list instead? (y/n): ").strip().lower() == "y":
+                add_appliance_from_list(household, table)
+            continue
+        try:
+            appliance = create_appliance(row, item["hours"])
+            household.add_appliance(appliance, item["quantity"])
+        except ValueError as error:
+            print(f"Skipped '{item['original']}': {error}.")
+            continue
+        print(f"Understood '{item['original']}' as {item['quantity']} x "
+              f"{row['name']} ({appliance.hours_per_day:g} h/day).")
+
+
 def check_weather(city):
     """Fetch (or load saved) history for the city and print a quick check."""
     try:
@@ -75,12 +99,13 @@ def main():
     except FileNotFoundError:
         print(f"Cannot find the appliance table at {APPLIANCE_CSV}.")
         return
+    matcher = ApplianceMatcher(table)
     household = Household()
     while True:
         print("\n=== SolarSense ===")
         print("1. Choose city")
         print("2. Add an appliance from the list")
-        print("3. Type appliances in plain words   (TODO - Member B)")
+        print("3. Type appliances in plain words")
         print("4. Show my appliances and daily use")
         print("5. Check weather data")
         print("6. Recommend a solar system         (TODO - Member B)")
@@ -95,6 +120,8 @@ def main():
             print(f"City set to {household.city}.")
         elif choice == 2:
             add_appliance_from_list(household, table)
+        elif choice == 3:
+            add_appliances_from_text(household, table, matcher)
         elif choice == 4:
             print("No appliances yet." if household.is_empty() else household.summary())
         elif choice == 5:
