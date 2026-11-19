@@ -17,7 +17,7 @@ CITIES = {
     "Peshawar": (34.01, 71.58),
 }
 
-# Hourly weather variables we ask Open-Meteo for.
+#  Hourly weather variables we ask Open-Meteo for.
 HOURLY_VARIABLES = ["shortwave_radiation", "cloud_cover", "temperature_2m"]
 
 # One full year of history used for the monthly estimates and the models.

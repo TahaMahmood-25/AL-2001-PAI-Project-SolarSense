@@ -13,13 +13,17 @@ NUMBER_WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
 
 # Words that carry no meaning for matching. A set is right: we only ask "is it in there?"
 STOP_WORDS = {"a", "an", "the", "of", "for", "my", "i", "have", "with",
-              "about", "around", "approx", "x", "is", "are", "in", "at"}
+              "about", "around", "approx", "x", "is", "are", "in", "at",
+              "use", "uses", "used"}
 
 # Different ways people write the same thing -> one standard form.
 VARIANTS = [
     (r"\ba[/.]c\b", "ac"),
     (r"\bair[\s-]*condition(?:er|ing|ed)?s?\b", "ac"),
     (r"\bhorse\s*power\b", "hp"),
+    (r"\bbulbs\b", "bulb"),
+    (r"\blights\b", "light"),
+    (r"\brefrigerators?\b", "refrigerator"),
 ]
 
 # Short words that end in "s" but whose "s" must be removed to make them singular.
@@ -134,8 +138,20 @@ def parse_appliance_text(text, matcher):
         hours, rest = extract_hours(part)
         quantity, rest = extract_quantity(rest)
         phrase = clean_text(rest)
+        if quantity == 0:
+            results.append({"original": part, "phrase": phrase, "row": None,
+                            "score": 0.0, "quantity": 0, "hours": hours,
+                            "error": "Quantity must be at least 1."})
+            continue
+        if phrase in {"ac", "air conditioner", "inverter ac"}:
+            results.append({"original": part, "phrase": phrase, "row": None,
+                            "score": 1.0,
+                            "quantity": 1 if quantity is None else quantity,
+                            "hours": hours, "ambiguous_ac": True})
+            continue
         row, score = matcher.best_match(phrase)
         results.append({"original": part, "phrase": phrase, "row": row,
-                        "score": score, "quantity": quantity or 1,
+                        "score": score,
+                        "quantity": 1 if quantity is None else quantity,
                         "hours": hours})
     return results

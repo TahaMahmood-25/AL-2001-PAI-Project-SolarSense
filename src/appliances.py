@@ -1,5 +1,6 @@
 """Appliance classes, the appliance table loader and the Household container."""
 import csv
+import math
 from abc import ABC, abstractmethod
 
 from config import APPLIANCE_CSV
@@ -13,6 +14,8 @@ class Appliance(ABC):
     """
 
     def __init__(self, name, watts, hours_per_day):
+        if not isinstance(name, str) or not name.strip():
+            raise ValueError("appliance name cannot be empty")
         self._name = name
         self._watts = 0.0
         self._hours_per_day = 0.0
@@ -32,7 +35,7 @@ class Appliance(ABC):
     @watts.setter
     def watts(self, value):
         value = float(value)
-        if value <= 0:
+        if not math.isfinite(value) or value <= 0:
             raise ValueError("watts must be greater than 0")
         self._watts = value
 
@@ -44,7 +47,7 @@ class Appliance(ABC):
     @hours_per_day.setter
     def hours_per_day(self, value):
         value = float(value)
-        if not 0 <= value <= 24:
+        if not math.isfinite(value) or not 0 <= value <= 24:
             raise ValueError("hours per day must be between 0 and 24")
         self._hours_per_day = value
 
@@ -75,7 +78,7 @@ class CyclingAppliance(Appliance):
     def __init__(self, name, watts, hours_per_day, duty_cycle=0.5):
         super().__init__(name, watts, hours_per_day)
         duty_cycle = float(duty_cycle)
-        if not 0 < duty_cycle <= 1:
+        if not math.isfinite(duty_cycle) or not 0 < duty_cycle <= 1:
             raise ValueError("duty cycle must be above 0 and at most 1")
         self._duty_cycle = duty_cycle
 
@@ -137,8 +140,15 @@ class Household:
 
     def add_appliance(self, appliance, quantity=1):
         """Add `quantity` copies of an appliance."""
-        if quantity < 1:
+        if isinstance(quantity, bool):
+            raise ValueError("quantity must be a whole number")
+        try:
+            numeric_quantity = float(quantity)
+        except (TypeError, ValueError):
+            raise ValueError("quantity must be a whole number")
+        if not numeric_quantity.is_integer() or numeric_quantity < 1:
             raise ValueError("quantity must be at least 1")
+        quantity = int(numeric_quantity)
         self._items.append((appliance, quantity))
 
     def is_empty(self):

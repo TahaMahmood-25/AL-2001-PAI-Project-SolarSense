@@ -1,5 +1,6 @@
 """Save the results of a SolarSense session as a plain-text report."""
 from datetime import datetime
+from uuid import uuid4
 
 from config import RESULTS_DIR
 
@@ -37,7 +38,8 @@ def save_report(household, extra_lines=None, folder=RESULTS_DIR):
     if household.is_empty():
         raise ValueError("Add at least one appliance before saving a report.")
     folder.mkdir(parents=True, exist_ok=True)
-    path = folder / f"solarsense_report_{datetime.now():%Y%m%d_%H%M%S}.txt"
-    with open(path, "w", encoding="utf-8") as file:
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+    path = folder / f"solarsense_report_{timestamp}_{uuid4().hex[:8]}.txt"
+    with open(path, "x", encoding="utf-8") as file:
         file.write(build_report_text(household, extra_lines))
     return path
