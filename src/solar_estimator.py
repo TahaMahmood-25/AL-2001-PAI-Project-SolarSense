@@ -93,7 +93,7 @@ class SolarEstimator:
             raise SolarDataError("System capacity must be numeric.") from error
         if not math.isfinite(capacity_kwp) or capacity_kwp <= 0:
             raise SolarDataError("System capacity must be greater than zero.")
-        dates = np.asarray([str(value)[:10] for value in self.time[::24]])
+        dates = self.time[::24].astype("U10")
         # A scalar capacity broadcasts over each day's 24 hourly yields.
         daily_hourly = self.hourly_kwh_per_kw() * capacity_kwp
         daily = np.where(
@@ -103,11 +103,9 @@ class SolarEstimator:
 
     def monthly_output_kwh(self, capacity_kwp: float) -> dict[str, float]:
         dates, daily = self.daily_output_kwh(capacity_kwp)
-        output: dict[str, float] = {}
-        for date, kwh in zip(dates, daily):
-            month = date[:7]
-            output[month] = output.get(month, 0.0) + float(kwh)
-        return output
+        months, inverse = np.unique(dates.astype("U7"), return_inverse=True)
+        totals = np.bincount(inverse, weights=daily)
+        return dict(zip(months.tolist(), totals.tolist()))
 
     def monthly_generation_per_kwp(self) -> dict[str, float]:
         """Monthly kWh output produced by a 1 kWp system."""
@@ -135,7 +133,7 @@ class SolarEstimator:
             month: kwh / month_days[month]
             for month, kwh in generation.items()
         }
-        worst_month = min(avg_daily_yield, key=avg_daily_yield.get)
+        worst_month = min(avg_daily_yield, key=lambda month: avg_daily_yield[month])
         if avg_daily_yield[worst_month] <= 0:
             raise SolarDataError(
                 "Solar radiation is zero; a system size cannot be estimated."

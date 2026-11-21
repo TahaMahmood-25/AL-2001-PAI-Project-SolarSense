@@ -299,8 +299,10 @@ def recommend_solar_system(household, report_lines):
         )
         print("\nRadiation-model comparison (complete held-out months):")
         for name, metrics in results.items():
+            train_metrics = predictor.train_results[name]
             print(f"  {name}: MAE={metrics['MAE']:.3f} kWh/m2, "
-                  f"RMSE={metrics['RMSE']:.3f} kWh/m2, R2={metrics['R2']:.3f}")
+                  f"RMSE={metrics['RMSE']:.3f} kWh/m2, R2={metrics['R2']:.3f} "
+                  f"(training RMSE={train_metrics['RMSE']:.3f}, R2={train_metrics['R2']:.3f})")
         if model_improved:
             print("At least one trained model has lower test RMSE than the naive baseline.")
         else:

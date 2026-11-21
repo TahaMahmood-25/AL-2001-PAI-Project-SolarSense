@@ -110,10 +110,13 @@ class SolarPredictor:
 
         baseline_prediction = np.full(len(test), y_train.mean(), dtype=float)
         self.results["Naive mean baseline"] = self._metrics(y_test, baseline_prediction)
+        self.train_results = {"Naive mean baseline": self._metrics(y_train, np.full(len(train), y_train.mean(), dtype=float))}    
         for name, model in candidates.items():
-            model.fit(X_train, y_train)
+            model.fit(X_train, y_train)                        # 1. train first
             predictions = np.maximum(0.0, model.predict(X_test))
             self.results[name] = self._metrics(y_test, predictions)
+            self.train_results[name] = self._metrics(          # 2. only then score the training data
+                y_train, np.maximum(0.0, model.predict(X_train)))
             self.models[name] = model
 
         self.test_dates = test.index
